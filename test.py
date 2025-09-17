@@ -62,6 +62,7 @@ class TestResult:
 
 
 def consume_args():
+    
     parser = argparse.ArgumentParser()
     parser.add_argument('-b', '--batch-size', type=int, default=2, dest='batch_size', help='Batch size')
     parser.add_argument('--num-workers', type=int, default=4, dest='num_workers', help='Number of workers for dataloader')
@@ -139,20 +140,14 @@ if __name__ == '__main__':
 
 
     # Load Class Distributions
-    print('Load Class Distributions...')
     test_retino_class_dist, test_edema_class_dist = test_loader.dataset.class_dist()
     test_retino_class_dist = torch.tensor(test_retino_class_dist, dtype=torch.float32, device=device)
     test_edema_class_dist = torch.tensor(test_edema_class_dist, dtype=torch.float32, device=device)
-    val_retino_class_dist, val_edema_class_dist = val_loader.dataset.class_dist()
-    val_retino_class_dist = torch.tensor(val_retino_class_dist, dtype=torch.float32, device=device)    
-    val_edema_class_dist = torch.tensor(val_edema_class_dist, dtype=torch.float32, device=device)
-    
     
 
     # Define Loss Functions
     focal_loss_fn = { 
                     'test': loss.FocalRetinalDiseaseLoss(gamma=args.gamma, alpha_retino=test_retino_class_dist, alpha_edema=test_edema_class_dist[0].item()),
-                    'val': loss.FocalRetinalDiseaseLoss(gamma=args.gamma, alpha_retino=1 - val_retino_class_dist, alpha_edema=val_edema_class_dist[0].item()),
                     }
     
     
@@ -165,7 +160,7 @@ if __name__ == '__main__':
     # Load Checkpoint
     load_model(args.model_path, model)
         
-    test_loss_fns = [normal_loss_fn, focal_loss_fn['val']]
+    test_loss_fns = [normal_loss_fn, focal_loss_fn['test']]
     test_result = test(model, val_loader, test_loss_fns, device)
     
     print(f"Test Loss (Normal): {test_result.loss[0]:.4f}")
