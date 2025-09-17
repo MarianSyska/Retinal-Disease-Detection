@@ -1,13 +1,15 @@
-import torch
-import numpy as np
-from dataclasses import dataclass
-from numpy.typing import NDArray
-from tqdm import tqdm
-from torchvision.models import resnet50
+import argparse
 import json
+from dataclasses import dataclass
+
+import numpy as np
+from numpy.typing import NDArray
+import torch
+from torchvision.models import resnet50
+from tqdm import tqdm
+
 import loss
 from dataset import download_dataset
-import argparse
 
 
 class TestResulutJsonEncoder(json.JSONEncoder):

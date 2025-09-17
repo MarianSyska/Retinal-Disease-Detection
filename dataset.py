@@ -1,12 +1,13 @@
-from torch.utils.data import Dataset
-import pandas
-from PIL import Image
-import PIL
 import os
+
+import PIL
+from PIL import Image
 import torch
-import kagglehub
-from torch.utils.data import DataLoader
+from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms as tfs
+import pandas
+import kagglehub
+
 
 class RetinalDiseaseDetectionDataset(Dataset):
     

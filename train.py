@@ -1,14 +1,16 @@
-import torch
 import os
+import json
 import argparse
+
+import torch
 from torchvision.models import resnet50
 from torchvision.models import ResNet50_Weights
-import loss
-from test import test
 from tqdm import tqdm
+
+import loss
+from test import test, TestResulutJsonEncoder
 from dataset import download_dataset
-import json
-from test import TestResulutJsonEncoder
+
 
 
 def consume_args():
