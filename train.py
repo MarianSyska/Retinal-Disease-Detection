@@ -16,15 +16,17 @@ from dataset import download_dataset
 def consume_args():
     parser = argparse.ArgumentParser()
     
-    parser.add_argument('--gamma', type=float, default=2, dest='gamma', help='Gamma for Focal Loss')
-    parser.add_argument('--output', type=str, default=r'experiments', dest='output', help='Dir to save the model')
-    parser.add_argument('--save-inv', type=int, default=1, dest='save_inv', help='Number of epochs to save the model')
-    parser.add_argument('-sp', '--starting-point', type=str, default=None, dest='starting_point', help='checkpoint to start from')
+    parser.add_argument('-o', '--output', type=str, default=r'experiments', dest='output', help='Dir to save the model')
+    parser.add_argument('--checkpoint', type=str, default=None, dest='checkpoint', help='Checkpoint to start from')
+    
     parser.add_argument('-e', '--epochs', type=int, default=10, dest='epochs', help='Number of epochs to train for')
-    parser.add_argument('-b', '--batch-size', type=int, default=4, dest='batch_size', help='Batch size')
-    parser.add_argument('--step-inv', type=int, default=1, dest='step_inv', help='Number of steps to perform an optimizer step')    
+    parser.add_argument('-b', '--batch-size', type=int, default=2, dest='batch_size', help='Batch size')
+    parser.add_argument('--step-inv', type=int, default=2, dest='step_inv', help='Number of epochs to perform an optimizer step') 
+    parser.add_argument('--save-inv', type=int, default=1, dest='save_inv', help='Number of epochs to save the model')
     parser.add_argument('--num-workers', type=int, default=4, dest='num_workers', help='Number of workers for dataloader')
     parser.add_argument('--batch-print-inv', type=int, default=1, dest='batch_print_inv', help='Number of batches to print after')
+
+    parser.add_argument('-g', '--gamma', type=float, default=2, dest='gamma', help='Gamma for Focal Loss')
     parser.add_argument('-lr', '--learning-rate', type=float, default=1e-5, dest='learning_rate', help='Learning rate')
     parser.add_argument('-wd', '--weight-decay', type=float, default=0, dest='weight_decay', help='Weight decay')
     parser.add_argument('-m', '--momentum', type=float, default=0.9, dest='momentum', help='Momentum')
@@ -184,26 +186,34 @@ if __name__ == '__main__':
     
     
     # Define Optimizer
-    optimizer = torch.optim.Adam(model.parameters(), 
+    optimizer = torch.optim.AdamW(model.parameters(), 
                                  lr=args.learning_rate, 
                                  weight_decay=args.weight_decay, 
                                  betas=(args.momentum, args.momentum ** 2),
                                  )
 
+    
+    # Scheduler
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
+    
 
     # Load Checkpoint
     start_epoch = 0
-    if args.starting_point is not None:
-        start_epoch = load_model(args.starting_point, model, optimizer)
+    if args.checkpoint is not None:
+        start_epoch = load_model(args.checkpoint, model, optimizer)
     
     
     # Load statistics
     stats = load_stats(os.path.join(args.output, 'statistics.json'))
+
+
+    # Create the output directory
+    os.makedirs(args.output, exist_ok=True)
     
     
     # Train Model
     print('Training Model...')
-    for e in range(start_epoch, args.epochs):
+    for e in range(start_epoch, start_epoch + args.epochs):
         
         train_loss = train(model, train_loader, optimizer, focal_loss_fn["train"], args.step_inv, args.batch_print_inv, device)
         
